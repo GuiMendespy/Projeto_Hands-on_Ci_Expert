@@ -1,0 +1,28 @@
+# ==========================================================
+# vending.upf - TEMPLATE inicial (UPF 2.1), dominio unico
+# Ajuste tensoes, nomes de supplies e, se o TB instanciar o DUT
+# em outro escopo, adicione 'set_scope <instancia_do_dut>' no topo.
+# ==========================================================
+
+# --- Dominio de energia (todo o design em um unico dominio) ---
+create_power_domain PD_TOP -include_scope
+
+# --- Portas e redes de alimentacao ---
+create_supply_port VDD
+create_supply_port VSS
+
+create_supply_net VDD -domain PD_TOP
+create_supply_net VSS -domain PD_TOP
+
+connect_supply_net VDD -ports VDD
+connect_supply_net VSS -ports VSS
+
+set_domain_supply_net PD_TOP -primary_power_net VDD -primary_ground_net VSS
+
+# --- Estados de tensao (AJUSTAR para a sua tecnologia) ---
+add_port_state VDD -state {NOM 1.2}
+add_port_state VSS -state {GND 0.0}
+
+# --- Tabela de estados de energia ---
+create_pst vending_pst -supplies {VDD VSS}
+add_pst_state NORMAL -pst vending_pst -state {NOM GND}
