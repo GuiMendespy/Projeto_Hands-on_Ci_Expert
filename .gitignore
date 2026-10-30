@@ -1,1 +1,17 @@
 syn
+# Logs e temporarios da Synopsys/VCS
+csrc/
+simv
+simv.daidir/
+simv_upf
+simv_upf.daidir/
+*.daidir/
+*.fsdb
+*.vcd
+*.log
+logs/
+ucli.key
+novas*
+verdi*
+DVEfiles/
+.vlogan*

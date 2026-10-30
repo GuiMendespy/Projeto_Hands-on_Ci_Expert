@@ -11,38 +11,26 @@ LOG_DIR   = logs
 # ==========================================================
 # Arquivos RTL e pacotes (ordem estrita de dependencia)
 # ==========================================================
-PKG_FILES = $(RTL_DIR)/vending_pkg.sv
-
 RTL_FILES = \
-    $(RTL_DIR)/comparator.sv \
-    $(RTL_DIR)/subtractor.sv \
-    $(RTL_DIR)/memory.sv \
-    $(RTL_DIR)/credit_reg.sv \
-# ==========================================================
-# Diretorios
-# ==========================================================
-RTL_DIR   = rtl
-TB_DIR    = tb
-SYNTH_DIR = syn
-
-    $(RTL_DIR)/control_unit.sv \
-    $(RTL_DIR)/vending_top.sv
-
+    $(RTL_DIR)/minisoc_aes_sbox.sv \
+    $(RTL_DIR)/minisoc_aes_sub_bytes.sv \
+    $(RTL_DIR)/minisoc_aes_shift_rows.sv \
+    $(RTL_DIR)/minisoc_aes_inv_sbox.sv \
+    $(RTL_DIR)/minisoc_aes_inv_sub_bytes.sv \
+    $(RTL_DIR)/minisoc_aes_inv_shift_rows.sv
 # ==========================================================
 # Testbench
 # ==========================================================
 TB_FILES = \
-    $(TB_DIR)/interface.sv \
-    $(TB_DIR)/package.sv \
-    $(TB_DIR)/tb_vending.sv
+    $(TB_DIR)/tb_minisoc_aes_sub_shift.sv
 
-TOP = tb_vending
+TOP = tb_minisoc_aes_sub_shift
 
 # ==========================================================
 # Simulacao (VCS)
 # ==========================================================
 TIMESCALE = 1ns/1ps
-FSDB      = vending_machine.fsdb
+FSDB      = aes_sim.fsdb
 
 # Opcoes em tempo de execucao (podem ser sobrescritas: make run SEED=7 TEST=meu_teste)
 SEED      ?= 1
@@ -56,6 +44,8 @@ VCS_FLAGS = -full64 \
             -debug_access+all \
             -kdb \
             -ntb_opts uvm \
+			+incdir+$(TB_DIR) \
+            +incdir+$(RTL_DIR) \
             +lint=all,noWMIA-L,noNS
 
 # ==========================================================
@@ -100,10 +90,10 @@ help:
 # ==========================================================
 compile:
 	@mkdir -p $(LOG_DIR)
-	vcs $(VCS_FLAGS) -top $(TOP) $(PKG_FILES) $(RTL_FILES) $(TB_FILES) -l $(LOG_DIR)/compile.log
+	vcs $(VCS_FLAGS) -top $(TOP) $(RTL_FILES) $(TB_FILES) -l $(LOG_DIR)/compile.log
 
 run: compile
-	./simv $(RUN_ARGS) -l $(LOG_DIR)/sim.log
+	./simv -l $(LOG_DIR)/sim.log
 
 # Regressao com varias seeds
 SEEDS ?= 1 2 3 4 5
