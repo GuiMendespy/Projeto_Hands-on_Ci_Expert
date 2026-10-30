@@ -6,8 +6,8 @@ module minisoc_aes_inv_sub_bytes (
   for (genvar n = 0; n < 16; n++) 
     begin
       minisoc_aes_inv_sbox u_isbox (
-          .i_byte(entrada[127-8*n -: 8]),
-          .o_byte(saida[127-8*n -: 8])
+          .entrada(entrada[127-8*n -: 8]),
+          .saida(saida[127-8*n -: 8])
       );
     end
 endmodule

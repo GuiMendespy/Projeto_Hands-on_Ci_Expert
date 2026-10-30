@@ -46,7 +46,7 @@ VCS_FLAGS = -full64 \
             -ntb_opts uvm \
 			+incdir+$(TB_DIR) \
             +incdir+$(RTL_DIR) \
-            +lint=all,noWMIA-L,noNS
+            
 
 # ==========================================================
 # UPF (baixo consumo)
