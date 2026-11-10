@@ -15,20 +15,25 @@ PKG_FILES =
 
 RTL_FILES = \
     $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_sbox.sv \
-    $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_sub_bytes.sv \
-    $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_shift_rows.sv \
     $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_inv_sbox.sv \
+    $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_sub_bytes.sv \
     $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_inv_sub_bytes.sv \
-    $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_inv_shift_rows.sv
+    $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_shift_rows.sv \
+    $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_inv_shift_rows.sv \
+    $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_add_round_key.sv \
+    $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_mix_columns.sv \
+    $(RTL_DIR)/minisoc_aes/minisoc_aes_dp/minisoc_aes_inv_mix_columns.sv
 
 # ==========================================================
-# Testbench
+# Testbenches
 # ==========================================================
 TB_FILES = \
     $(TB_DIR)/tb_minisoc_aes_sub_shift.sv \
     $(TB_DIR)/tb_semana3.sv
 
-TOP = tb_semana3
+# Nomes exatos dos modulos (declarados dentro dos arquivos SystemVerilog)
+TOP_SUB_SHIFT = tb_minisoc_aes_sub_shift
+TOP_SEMANA3   = tb_semana_03
 
 # ==========================================================
 # Simulacao (Synopsys VCS)
@@ -36,7 +41,7 @@ TOP = tb_semana3
 TIMESCALE = 1ns/1ps
 FSDB      = aes_sim.fsdb
 
-# Opcoes em tempo de execucao (ex: make run SEED=7 TEST=meu_teste)
+# Opcoes em tempo de execucao (ex: make run_semana3 SEED=7 TEST=meu_teste)
 SEED      ?= 1
 UVM_VERB  ?= UVM_MEDIUM
 TEST      ?=
@@ -69,9 +74,9 @@ SVF_FILE  = default.svf
 help:
 	@echo ""
 	@echo "  Simulacao VCS"
-	@echo "    make compile         compila RTL + TB com o VCS (gera ./simv)"
-	@echo "    make run             compila e simula no VCS (SEED=n TEST=nome UVM_VERB=UVM_HIGH)"
-	@echo "    make regress         roda varias seeds no VCS (SEEDS='1 2 3 4 5')"
+	@echo "    make run_sub_shift   compila e simula o testbench de SubBytes/ShiftRows"
+	@echo "    make run_semana3     compila e simula o testbench completo da Semana 3"
+	@echo "    make run_all         compila e executa OS DOIS testes em sequencia"
 	@echo "    make wave            abre o Verdi com o FSDB e o banco KDB"
 	@echo ""
 	@echo "  Sintese / Formal"
@@ -86,25 +91,39 @@ help:
 	@echo ""
 
 # ==========================================================
-# Compilacao / Simulacao VCS
+# Compilacao e Simulacao por Testbench
 # ==========================================================
-compile:
+
+# 1. Executa o teste de SubBytes e ShiftRows
+run_sub_shift:
 	@mkdir -p $(LOG_DIR)
-	vcs $(VCS_FLAGS) -top $(TOP) $(PKG_FILES) $(RTL_FILES) $(TB_FILES) -l $(LOG_DIR)/compile.log
+	vcs $(VCS_FLAGS) -top $(TOP_SUB_SHIFT) $(PKG_FILES) $(RTL_FILES) $(TB_FILES) -o simv_sub_shift -l $(LOG_DIR)/compile_sub_shift.log
+	./simv_sub_shift $(RUN_ARGS) -l $(LOG_DIR)/sim_sub_shift.log
 
-run: compile
-	./simv $(RUN_ARGS) -l $(LOG_DIR)/sim.log
+# 2. Executa o teste integrado da Semana 3
+run_semana3:
+	@mkdir -p $(LOG_DIR)
+	vcs $(VCS_FLAGS) -top $(TOP_SEMANA3) $(PKG_FILES) $(RTL_FILES) $(TB_FILES) -o simv_semana3 -l $(LOG_DIR)/compile_semana3.log
+	./simv_semana3 $(RUN_ARGS) -l $(LOG_DIR)/sim_semana3.log
 
-# Regressao com varias seeds no VCS
+# 3. Executa os dois testes em sequencia
+run_all: run_sub_shift run_semana3
+
+# Atalho padrao para rodar todos os testes
+run: run_all
+
+# Regressao com varias seeds no teste da Semana 3
 SEEDS ?= 1 2 3 4 5
-regress: compile
+regress:
+	@mkdir -p $(LOG_DIR)
+	vcs $(VCS_FLAGS) -top $(TOP_SEMANA3) $(PKG_FILES) $(RTL_FILES) $(TB_FILES) -o simv_semana3 -l $(LOG_DIR)/compile_semana3.log
 	@for s in $(SEEDS); do \
 		echo "==> seed $$s"; \
-		./simv +ntb_random_seed=$$s +UVM_VERBOSITY=UVM_LOW -l $(LOG_DIR)/sim_seed$$s.log || exit 1; \
+		./simv_semana3 +ntb_random_seed=$$s +UVM_VERBOSITY=UVM_LOW -l $(LOG_DIR)/sim_seed$$s.log || exit 1; \
 	done
 
 wave:
-	verdi -dbdir simv.daidir -ssf $(FSDB) &
+	verdi -dbdir simv_semana3.daidir -ssf $(FSDB) &
 
 # ==========================================================
 # UPF: simulacao power-aware (VCS NLP)
@@ -116,7 +135,7 @@ $(UPF_FILE):
 compile_upf: $(UPF_FILE)
 	@mkdir -p $(LOG_DIR)
 	vcs $(VCS_FLAGS) -lca -upf $(UPF_FILE) -Mdir=csrc_upf -o simv_upf \
-		-top $(TOP) $(PKG_FILES) $(RTL_FILES) $(TB_FILES) -l $(LOG_DIR)/compile_upf.log
+		-top $(TOP_SEMANA3) $(PKG_FILES) $(RTL_FILES) $(TB_FILES) -l $(LOG_DIR)/compile_upf.log
 
 run_upf: compile_upf
 	./simv_upf $(RUN_ARGS) -l $(LOG_DIR)/sim_upf.log
@@ -149,7 +168,7 @@ formality: $(FM_TCL)
 # Limpeza
 # ==========================================================
 clean_sim:
-	rm -rf csrc csrc_upf simv simv_upf simv*.daidir *.daidir novas* AN.DB ucli.key \
+	rm -rf csrc csrc_upf simv* simv*.daidir *.daidir novas* AN.DB ucli.key \
 		verdi* DVEfiles .vlogan* *.fsdb *.vcd command.log filename.log $(LOG_DIR)
 
 clean_synth:
@@ -165,5 +184,5 @@ clean_upf:
 
 clean: clean_sim clean_synth clean_fm clean_upf
 
-.PHONY: help compile run regress wave compile_upf run_upf synth fm_gen formality \
+.PHONY: help run_sub_shift run_semana3 run_all run regress wave compile_upf run_upf synth fm_gen formality \
         clean_sim clean_synth clean_fm clean_upf clean

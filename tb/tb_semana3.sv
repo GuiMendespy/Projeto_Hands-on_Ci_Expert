@@ -3,7 +3,7 @@
 module tb_semana_03;
 
     // -------------------------------------------------------------------------
-    // Sinais de Interface e Instanciação dos Módulos
+    // Sinais de Interface
     // -------------------------------------------------------------------------
     logic [127:0] state_in;
     logic [127:0] round_key;
@@ -24,41 +24,51 @@ module tb_semana_03;
     int passed_tests = 0;
     int failed_tests = 0;
 
-    // Instanciação dos Módulos Sob Teste (DUTs)
+    // -------------------------------------------------------------------------
+    // Instanciação dos Módulos Sob Teste (Mapeamento de Portas Ajustado)
+    // -------------------------------------------------------------------------
+    
+    // AddRoundKey: utiliza state_in, round_key e state_out
     minisoc_aes_add_round_key u_add_rk (
-        .state_in(state_in),
-        .round_key(round_key),
-        .state_out(out_add_round_key)
+        .state_in  (state_in),
+        .round_key (round_key),
+        .state_out (out_add_round_key)
     );
 
+    // SubBytes: utiliza i_state e o_state
     minisoc_aes_sub_bytes u_sb (
-        .state_in(state_in),
-        .state_out(out_sub_bytes)
+        .i_state   (state_in),
+        .o_state   (out_sub_bytes)
     );
 
+    // ShiftRows: utiliza entrada e saida
     minisoc_aes_shift_rows u_sr (
-        .state_in(state_in),
-        .state_out(out_shift_rows)
+        .entrada   (state_in),
+        .saida     (out_shift_rows)
     );
 
+    // MixColumns: utiliza state_in e state_out
     minisoc_aes_mix_columns u_mc (
-        .state_in(state_in),
-        .state_out(out_mix_columns)
+        .state_in  (state_in),
+        .state_out (out_mix_columns)
     );
 
+    // InvSubBytes: utiliza entrada e saida
     minisoc_aes_inv_sub_bytes u_isb (
-        .state_in(state_in),
-        .state_out(out_inv_sub_bytes)
+        .entrada   (state_in),
+        .saida     (out_inv_sub_bytes)
     );
 
+    // InvShiftRows: utiliza entrada e saida
     minisoc_aes_inv_shift_rows u_isr (
-        .state_in(state_in),
-        .state_out(out_inv_shift_rows)
+        .entrada   (state_in),
+        .saida     (out_inv_shift_rows)
     );
 
+    // InvMixColumns: utiliza state_in e state_out
     minisoc_aes_inv_mix_columns u_imc (
-        .state_in(state_in),
-        .state_out(out_inv_mix_columns)
+        .state_in  (state_in),
+        .state_out (out_inv_mix_columns)
     );
 
     // -------------------------------------------------------------------------
@@ -125,7 +135,7 @@ module tb_semana_03;
         state_in  = 128'h046681e5e0cb199a48f8d37a2806264c;
         round_key = 128'ha0fafe1788542cb123a339392a6c7605; // Round Key 1
         #10;
-        check_128b("AddRoundKey (R1 Output)", out_add_round_key, 128'ha49c7ff2689f352b6b5be043026a5049);
+        check_128b("AddRoundKey (R1 Output)", out_add_round_key, 128'ha49c7ff2689f352b6b5bea43026a5049);
 
 
         // =====================================================================
