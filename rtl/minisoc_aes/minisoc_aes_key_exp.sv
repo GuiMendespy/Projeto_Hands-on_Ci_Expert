@@ -30,7 +30,7 @@ module minisoc_aes_key_exp
   assign rot_w = {prev[23:0], prev[31:24]};                 // RotWord(w3)
 
   for (genvar b = 0; b < 4; b++) begin : g_sw
-    minisoc_aes_sbox u_sbox (.i_byte(rot_w[31-8*b -: 8]), .o_byte(sub_w[31-8*b -: 8]));
+    minisoc_aes_sbox u_sbox (.entrada(rot_w[31-8*b -: 8]), .saida(sub_w[31-8*b -: 8]));
   end
 
   assign t  = sub_w ^ {rcon, 24'h0};
